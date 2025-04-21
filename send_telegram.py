@@ -1,9 +1,9 @@
 import streamlit as st
-import telegram
 import pandas as pd
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
+import httpx  # sustituye a la librería telegram
 
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -33,10 +33,20 @@ else:
     mensaje = "Mañana no hay etapa programada. Disfruta tu descanso. 🛌"
 
 try:
-    bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=mensaje, parse_mode=telegram.constants.ParseMode.MARKDOWN)
-    st.success("✅ Mensaje enviado correctamente a Telegram.")
+    response = httpx.post(
+        f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+        data={
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": mensaje,
+            "parse_mode": "Markdown"
+        }
+    )
+    if response.status_code == 200:
+        st.success("✅ Mensaje enviado correctamente a Telegram.")
+    else:
+        st.error(f"❌ Error al enviar mensaje: {response.text}")
 except Exception as e:
     st.error("❌ No se pudo enviar el mensaje.")
     st.text(str(e))
+
 
